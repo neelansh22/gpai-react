@@ -80,10 +80,6 @@ export default function AppSelector() {
           </motion.div>
         ))}
       </div>
-
-      <p className="mt-12 text-center text-[11px] text-slate-600">
-        Built locally with React, FastAPI, Recharts &amp; Plotly — Vercel deployment coming in Phase 2.
-      </p>
     </div>
   );
 }
