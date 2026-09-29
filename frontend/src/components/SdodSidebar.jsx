@@ -2,14 +2,45 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Wand2, MessageSquareText, Network, PencilRuler, Database, Sparkles, ArrowLeft, Wifi, WifiOff } from "lucide-react";
 import { useSdodState } from "../state/SdodState";
+import Tooltip from "./Tooltip";
 
 const NAV_ITEMS = [
-  { to: "/sdod", label: "Overview", icon: Wand2 },
-  { to: "/sdod/intent", label: "1. Define Intent", icon: MessageSquareText },
-  { to: "/sdod/schema", label: "2. Build Schema", icon: Network },
-  { to: "/sdod/editor", label: "3. Edit Schema", icon: PencilRuler },
-  { to: "/sdod/generate", label: "4. Generate Data", icon: Database },
-  { to: "/sdod/augment", label: "5. Augment & Explore", icon: Sparkles },
+  {
+    to: "/sdod",
+    label: "Overview",
+    icon: Wand2,
+    tip: "See the full pipeline at a glance and jump to any step.",
+  },
+  {
+    to: "/sdod/intent",
+    label: "1. Define Intent",
+    icon: MessageSquareText,
+    tip: "Describe your dataset in plain English \u2014 we detect the domain and ask smart follow-up questions.",
+  },
+  {
+    to: "/sdod/schema",
+    label: "2. Build Schema",
+    icon: Network,
+    tip: "Auto-generate a realistic multi-table schema from your intent, offline or via an AI connector.",
+  },
+  {
+    to: "/sdod/editor",
+    label: "3. Edit Schema",
+    icon: PencilRuler,
+    tip: "Fine-tune tables, columns, and types before generating any data.",
+  },
+  {
+    to: "/sdod/generate",
+    label: "4. Generate Data",
+    icon: Database,
+    tip: "Produce domain-aware synthetic rows for every table in your schema.",
+  },
+  {
+    to: "/sdod/augment",
+    label: "5. Augment & Explore",
+    icon: Sparkles,
+    tip: "Apply plain-English business rules (e.g. \u2018increase price by 10%\u2019) and preview or export results.",
+  },
 ];
 
 function StatusPill({ label, active }) {
@@ -52,13 +83,20 @@ export default function SdodSidebar() {
   };
 
   return (
-    <aside className="flex h-full w-72 shrink-0 flex-col border-r border-slate-800/70 bg-slate-950/80 px-4 py-6">
+    <aside className="flex h-full w-72 shrink-0 flex-col overflow-y-auto border-r border-slate-800/70 bg-slate-950/80 px-4 py-6">
       <div className="mb-4 flex items-center gap-3 px-2">
         <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 shadow-glow">
           <Wand2 className="h-6 w-6 text-white" />
         </div>
-        <div>
-          <p className="text-sm font-semibold leading-tight text-white">Synthetic Data</p>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-1.5">
+            <p className="truncate text-sm font-semibold leading-tight text-white">Synthetic Data</p>
+            <Tooltip
+              accent="emerald"
+              title="Synthetic Data On Demand"
+              content="Go from a plain-English data request to a full, realistic, multi-table dataset in minutes \u2014 no sample data required. Great for demos, testing, and prototyping."
+            />
+          </div>
           <p className="text-xs text-slate-400">On Demand</p>
         </div>
       </div>
@@ -72,22 +110,28 @@ export default function SdodSidebar() {
       </NavLink>
 
       <nav className="flex-1 space-y-1">
-        {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === "/sdod"}
-            className={({ isActive }) =>
-              `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
-                isActive
-                  ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/10 text-white ring-1 ring-emerald-500/30"
-                  : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
-              }`
-            }
-          >
-            <Icon className="h-4 w-4 shrink-0" />
-            <span className="truncate">{label}</span>
-          </NavLink>
+        {NAV_ITEMS.map(({ to, label, icon: Icon, tip }) => (
+          <div key={to} className="group relative">
+            <NavLink
+              to={to}
+              end={to === "/sdod"}
+              className={({ isActive }) =>
+                `flex items-center gap-3 rounded-xl px-3 py-2.5 pr-8 text-sm font-medium transition-all ${
+                  isActive
+                    ? "bg-gradient-to-r from-emerald-500/20 to-teal-500/10 text-white ring-1 ring-emerald-500/30"
+                    : "text-slate-400 hover:bg-slate-900 hover:text-slate-200"
+                }`
+              }
+            >
+              <Icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{label}</span>
+            </NavLink>
+            {tip && (
+              <span className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 transition-opacity group-hover:opacity-100">
+                <Tooltip accent="emerald" title={label} content={tip} />
+              </span>
+            )}
+          </div>
         ))}
       </nav>
 
