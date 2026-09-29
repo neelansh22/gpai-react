@@ -50,6 +50,7 @@ export default function DataIngestion() {
         icon={Database}
         title="Step 1 · Data Ingestion"
         subtitle="Load a symptom-to-disease dataset. Needs 'text' and 'label' columns."
+        tip="Bring in your case data from a URL or a CSV upload. Every downstream step (embeddings, clustering, training, diagnosis) depends on this dataset, so make sure it has a 'text' column with symptoms and a 'label' column with the condition."
       />
 
       <Card className="mb-6">

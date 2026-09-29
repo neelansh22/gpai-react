@@ -62,6 +62,7 @@ export default function Clusters() {
         icon={Boxes}
         title="Step 3 · 3D Cluster Visualization"
         subtitle="t-SNE dimensionality reduction reveals how medical conditions naturally group together."
+        tip="Each point is one case, projected from high-dimensional embeddings down to 3D. Points that cluster tightly together represent conditions with similar symptom patterns — drag to rotate, scroll to zoom, and hover a point for details."
       />
 
       {!status.processed ? (

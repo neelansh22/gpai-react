@@ -1,10 +1,12 @@
+import Tooltip from "./Tooltip";
+
 export function Card({ children, className = "" }) {
   return (
     <div className={`glass-panel rounded-2xl p-5 shadow-lg shadow-black/20 ${className}`}>{children}</div>
   );
 }
 
-export function PageHeader({ icon: Icon, title, subtitle, right }) {
+export function PageHeader({ icon: Icon, title, subtitle, right, tip, accent = "brand" }) {
   return (
     <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
       <div className="flex items-center gap-3">
@@ -14,7 +16,10 @@ export function PageHeader({ icon: Icon, title, subtitle, right }) {
           </div>
         )}
         <div>
-          <h1 className="text-xl font-semibold text-white">{title}</h1>
+          <div className="flex items-center gap-1.5">
+            <h1 className="text-xl font-semibold text-white">{title}</h1>
+            {tip && <Tooltip accent={accent} title={title} content={tip} side="bottom" />}
+          </div>
           {subtitle && <p className="mt-0.5 text-sm text-slate-400">{subtitle}</p>}
         </div>
       </div>

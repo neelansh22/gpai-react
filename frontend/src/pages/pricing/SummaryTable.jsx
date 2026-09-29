@@ -32,6 +32,8 @@ export default function SummaryTable() {
         icon={Table2}
         title="Corridor Summary Table"
         subtitle="Aggregated part counts and pricing band totals grouped by corridor status"
+        accent="sky"
+        tip="A sortable rollup of every part grouped by its corridor status, with counts and totals per band. Use this to quickly find how many parts need pricing attention."
       />
       <FilterBar />
 

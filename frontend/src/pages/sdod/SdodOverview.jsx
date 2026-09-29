@@ -26,6 +26,8 @@ export default function SdodOverview() {
         icon={Wand2}
         title="Synthetic Data on Demand"
         subtitle="Describe it. Shape it. Generate it. A domain-aware synthetic dataset engine — zero API keys, instant results."
+        accent="emerald"
+        tip="Track your progress through the 5-step pipeline: describe your intent, build a schema, refine it, generate rows, then apply business rules. Optionally connect OpenAI or Gemini in the sidebar for an AI-generated 'online' flavor."
       />
 
       <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">

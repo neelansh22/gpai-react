@@ -26,6 +26,7 @@ export default function Overview() {
         icon={Activity}
         title="GP's Assistant Diagnostician"
         subtitle="A modern, data-driven diagnostic pipeline — embeddings, clustering, and machine learning in one sleek console."
+        tip="This dashboard tracks your progress through the 5-step pipeline below. Complete each step in order, then click any card to jump straight to it."
       />
 
       <div className="mb-8 grid grid-cols-2 gap-4 md:grid-cols-4">

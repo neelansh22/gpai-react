@@ -54,6 +54,8 @@ export default function CorridorAnalysis() {
         icon={ScatterIcon}
         title="Corridor Analysis"
         subtitle="Invoice unit price vs amber pricing band — colored by corridor status (Red / Amber / Green)"
+        accent="sky"
+        tip="Each dot is one transaction, plotted by invoice price against the amber pricing band. Green points sit in a healthy margin, Amber signals caution, and Red points are priced below the floor — look for clusters of Red dots to spot at-risk parts."
       />
       <FilterBar />
 

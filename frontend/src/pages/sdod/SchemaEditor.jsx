@@ -108,7 +108,7 @@ export default function SchemaEditor() {
   if (!draft) {
     return (
       <div>
-        <PageHeader icon={PencilRuler} title="Step 3 — Edit Schema" subtitle="Fine-tune your generated schema, or upload your own." />
+        <PageHeader icon={PencilRuler} title="Step 3 — Edit Schema" subtitle="Fine-tune your generated schema, or upload your own." accent="emerald" tip="No schema yet? Build one in Step 2, or drop in your own JSON schema file below to skip straight to editing." />
         <Card>
           <p className="text-sm text-slate-400">
             No schema yet. Go to <strong className="text-slate-200">Build Schema</strong> first, or upload a JSON schema below.
@@ -154,6 +154,8 @@ export default function SchemaEditor() {
         icon={PencilRuler}
         title="Step 3 — Edit Schema"
         subtitle="Rename tables/columns, adjust types, or add/remove fields."
+        accent="emerald"
+        tip="Directly edit table and column names, data types, and primary/foreign keys. Add or remove tables as needed, then save — your changes carry through to data generation in the next step."
         right={
           <div className="flex gap-2">
             <Button variant="secondary" onClick={addTable}>

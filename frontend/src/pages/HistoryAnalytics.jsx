@@ -73,6 +73,7 @@ export default function HistoryAnalytics() {
         icon={HistoryIcon}
         title="Search History & Analytics"
         subtitle="Review past diagnoses and confidence-band analytics across conditions."
+        tip="Every diagnosis you run is logged here. Use this to audit past queries, tune confidence thresholds, and see analytics on which conditions come up most often and how confident the model was."
         right={
           <div className="flex gap-2">
             <Button variant="secondary" onClick={load}>

@@ -44,7 +44,7 @@ export default function GenerateData() {
   if (!status.has_schema) {
     return (
       <div>
-        <PageHeader icon={Database} title="Step 4 — Generate Data" subtitle="Produce rows for every table in your schema." />
+        <PageHeader icon={Database} title="Step 4 — Generate Data" subtitle="Produce rows for every table in your schema." accent="emerald" tip="You'll need a schema before generating data — complete Step 2 or 3 first." />
         <Card>
           <p className="text-sm text-slate-400">
             No schema available yet. Complete <strong className="text-slate-200">Build Schema</strong> or{" "}
@@ -61,6 +61,8 @@ export default function GenerateData() {
         icon={Database}
         title="Step 4 — Generate Data"
         subtitle="Rows are generated for every table and automatically joined via foreign keys."
+        accent="emerald"
+        tip="Pick how many rows per table and generate. Related tables are automatically linked through their foreign keys, so the data stays referentially consistent. Preview any table below before moving to augmentation."
         right={
           <div className="flex items-center gap-2">
             <select

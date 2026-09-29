@@ -55,6 +55,8 @@ export default function IntentWizard() {
         icon={MessageSquareText}
         title="Step 1 — Define Your Data Intent"
         subtitle="Describe the dataset you want in plain English. We detect the domain and ask a few calibration questions."
+        accent="emerald"
+        tip="Just describe what you need, e.g. 'e-commerce orders for a mid-size retailer'. We auto-detect the domain (ecommerce, HR, financial, etc.) and ask a couple of quick questions to calibrate scale and realism before building a schema."
       />
 
       <Card className="mb-6">

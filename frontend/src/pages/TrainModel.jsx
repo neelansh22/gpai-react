@@ -55,6 +55,7 @@ export default function TrainModel() {
         icon={SlidersHorizontal}
         title="Step 4 · Train Diagnostic Model"
         subtitle="Fit a logistic regression classifier on the embedded training data."
+        tip="We split your embedded cases into train/test sets and fit a classifier that learns to map symptom patterns to conditions. Test accuracy below tells you how well it generalizes to cases it hasn't seen."
       />
 
       {!status.processed ? (

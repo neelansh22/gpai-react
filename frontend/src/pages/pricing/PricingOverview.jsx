@@ -43,6 +43,8 @@ export default function PricingOverview() {
         icon={Gauge}
         title="Pricing Overview"
         subtitle="High-level KPIs across the aircraft parts sales & pricing corridor dataset"
+        accent="sky"
+        tip="A snapshot of the whole parts catalog: total transactions, average pricing corridor health, and how many parts fall into Red/Amber/Green bands. Use the filters above to narrow this down."
       />
       <FilterBar />
 

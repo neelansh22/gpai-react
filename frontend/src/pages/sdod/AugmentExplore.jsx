@@ -53,7 +53,7 @@ export default function AugmentExplore() {
   if (!status.has_data) {
     return (
       <div>
-        <PageHeader icon={Sparkles} title="Step 5 — Augment & Explore" subtitle="Apply business rules and explore your dataset." />
+        <PageHeader icon={Sparkles} title="Step 5 — Augment & Explore" subtitle="Apply business rules and explore your dataset." accent="emerald" tip="Generate data in Step 4 first, then come back here to apply business rules and explore the results." />
         <Card>
           <p className="text-sm text-slate-400">
             No dataset yet. Complete <strong className="text-slate-200">Generate Data</strong> first.
@@ -69,6 +69,8 @@ export default function AugmentExplore() {
         icon={Sparkles}
         title="Step 5 — Augment & Explore"
         subtitle="Apply plain-English business rules, then explore distributions and correlations."
+        accent="emerald"
+        tip="Type rules like 'increase price by 10%' to reshape the dataset on the fly, then preview per-table or consolidated views and export to CSV once you're happy with the result."
         right={
           <div className="flex gap-2">
             <a

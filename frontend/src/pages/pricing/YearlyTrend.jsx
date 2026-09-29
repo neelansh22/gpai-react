@@ -63,6 +63,8 @@ export default function YearlyTrend() {
         icon={TrendingUp}
         title="Yearly Trend"
         subtitle="Average invoice price against pricing corridor bands over time, by part class"
+        accent="sky"
+        tip="Tracks how average invoice pricing moves year over year against the Red/Amber/Green corridor bands for the selected part class. A widening gap from the green band can signal drifting pricing discipline."
       />
       <FilterBar />
 

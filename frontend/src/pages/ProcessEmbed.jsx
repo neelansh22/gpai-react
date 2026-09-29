@@ -46,6 +46,7 @@ export default function ProcessEmbed() {
         icon={Cpu}
         title="Step 2 · Process & Embed"
         subtitle="Convert patient-report text into numerical vectors for machine learning."
+        tip="Each case's symptom text is converted into a numerical embedding vector using your chosen AI engine. This turns unstructured text into something a clustering or ML algorithm can actually work with. The bar chart below shows how your labels are distributed."
       />
 
       {!status.rows ? (

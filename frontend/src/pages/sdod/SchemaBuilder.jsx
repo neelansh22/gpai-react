@@ -34,7 +34,7 @@ export default function SchemaBuilder() {
   if (!status.has_answers && !schema) {
     return (
       <div>
-        <PageHeader icon={Network} title="Step 2 — Schema Generation" subtitle="Build a relational schema from your intent." />
+        <PageHeader icon={Network} title="Step 2 — Schema Generation" subtitle="Build a relational schema from your intent." accent="emerald" tip="Once your intent is defined, we generate a realistic multi-table schema — tables, columns, types, and foreign keys — ready to review or edit." />
         <Card>
           <p className="text-sm text-slate-400">
             Complete the <strong className="text-slate-200">Define Intent</strong> step first so we know what kind
@@ -53,6 +53,8 @@ export default function SchemaBuilder() {
         icon={Network}
         title="Step 2 — Schema Generation"
         subtitle="A relational schema was generated from your intent and calibration answers."
+        accent="emerald"
+        tip="Each card below is a table in your generated schema — review the tables, columns, types, and foreign key relationships. Not quite right? Click Regenerate for a fresh pass, or fine-tune it in the next step."
         right={
           <Button variant="secondary" onClick={handleGenerate} disabled={loading}>
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCcw className="h-4 w-4" />}

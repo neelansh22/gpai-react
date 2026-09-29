@@ -54,6 +54,7 @@ export default function Diagnose() {
         icon={Stethoscope}
         title="Step 5 · Enter Symptoms & Diagnose"
         subtitle="The trained model analyzes symptom text and returns a confidence-scored diagnosis."
+        tip="Describe symptoms in plain English. The trained model embeds your text the same way as the training data and ranks the most likely conditions by confidence — this is a demo, not medical advice."
       />
 
       {!status.trained ? (
