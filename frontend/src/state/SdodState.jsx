@@ -18,6 +18,8 @@ const initialStatus = {
   consolidated_cols: 0,
   has_augmented: false,
   last_rule_message: null,
+  questions_source: null,
+  llm: { provider: "offline", connected: false, last_error: null },
 };
 
 export function SdodStateProvider({ children }) {
@@ -99,6 +101,16 @@ export function SdodStateProvider({ children }) {
     []
   );
 
+  const setLlmConfig = useCallback(
+    async (provider, apiKey) => {
+      const { data } = await sdodEndpoints.setConfig(provider, apiKey);
+      setStatus((prev) => ({ ...prev, llm: data }));
+      await refreshStatus();
+      return data;
+    },
+    [refreshStatus]
+  );
+
   const value = {
     status,
     setStatus,
@@ -115,6 +127,7 @@ export function SdodStateProvider({ children }) {
     saveSchema,
     uploadSchema,
     generateData,
+    setLlmConfig,
     toast,
     notify,
   };

@@ -9,6 +9,8 @@ export const sdodApi = axios.create({
 
 export const sdodEndpoints = {
   status: () => sdodApi.get("/api/sdod/status"),
+  getConfig: () => sdodApi.get("/api/sdod/config"),
+  setConfig: (provider, apiKey) => sdodApi.post("/api/sdod/config", { provider, api_key: apiKey }),
   submitIntent: (intent) => sdodApi.post("/api/sdod/intent", { intent }),
   submitAnswers: (answers) => sdodApi.post("/api/sdod/answers", { answers }),
   generateSchema: () => sdodApi.post("/api/sdod/schema/generate"),

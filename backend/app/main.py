@@ -108,6 +108,11 @@ class SdodRuleRequest(BaseModel):
     rule: str
 
 
+class SdodConfigRequest(BaseModel):
+    provider: str = "offline"
+    api_key: Optional[str] = None
+
+
 # ----------------------------------------------------------------------------
 # Helpers
 # ----------------------------------------------------------------------------
@@ -495,6 +500,19 @@ def pricing_class_pie(
 @app.get("/api/sdod/status")
 def sdod_status():
     return sdod.get_status()
+
+
+@app.get("/api/sdod/config")
+def sdod_get_config():
+    return sdod.get_llm_status()
+
+
+@app.post("/api/sdod/config")
+def sdod_set_config(req: SdodConfigRequest):
+    try:
+        return sdod.configure_llm(req.provider, req.api_key)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @app.post("/api/sdod/intent")

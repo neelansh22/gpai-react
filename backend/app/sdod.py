@@ -23,6 +23,7 @@ Design notes (why this is a *clever* reactification, not a 1:1 port):
 from __future__ import annotations
 
 import io
+import json
 import random
 import re
 from datetime import datetime, timedelta
@@ -30,6 +31,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 import pandas as pd
+import requests
 
 random.seed(11)
 np.random.seed(11)
@@ -41,14 +43,18 @@ STATE: Dict[str, Any] = {
     "intent": None,
     "domain": None,
     "questions": [],
+    "questions_source": None,  # "offline" | "llm"
     "answers": {},
     "schema": None,
-    "schema_source": None,  # "generated" | "uploaded"
+    "schema_source": None,  # "generated" | "uploaded" | "llm"
     "tables": {},  # table_name -> list[dict] (raw generated rows)
     "consolidated": None,  # pd.DataFrame
     "augmented": None,  # pd.DataFrame (after business rules)
     "rows_per_table": 60,
     "last_rule_message": None,
+    "llm_provider": "offline",  # "offline" | "openai" | "gemini"
+    "llm_api_key": None,
+    "llm_last_error": None,
 }
 
 
@@ -67,6 +73,171 @@ def _reset_downstream(from_step: str) -> None:
     if "augment" in remaining:
         STATE["augmented"] = None
         STATE["last_rule_message"] = None
+
+
+# ----------------------------------------------------------------------------
+# "Online" LLM connectors (OpenAI / Gemini) — optional, opt-in flavor
+# ----------------------------------------------------------------------------
+# By default SDoD runs fully offline via the deterministic template engine
+# below. If the user connects an OpenAI or Gemini API key, we instead ask the
+# real LLM to (a) draft the clarifying questions and (b) draft the schema —
+# the two steps where a genuine model gives noticeably richer, more
+# domain-specific results. Data generation itself stays on the fast offline
+# engine even in "online" mode (calling an LLM per-cell for hundreds of rows
+# is what made the original Streamlit app slow and flaky) — but every LLM
+# call is wrapped so any failure (bad key, timeout, malformed JSON) silently
+# and safely falls back to the offline template engine, so the app can never
+# get stuck.
+LLM_TIMEOUT_SECONDS = 25
+
+
+def configure_llm(provider: str, api_key: Optional[str] = None) -> Dict[str, Any]:
+    provider = (provider or "offline").strip().lower()
+    if provider not in ("offline", "openai", "gemini"):
+        raise ValueError("provider must be one of: offline, openai, gemini")
+    STATE["llm_provider"] = provider
+    STATE["llm_api_key"] = (api_key or "").strip() or None
+    STATE["llm_last_error"] = None
+    return get_llm_status()
+
+
+def get_llm_status() -> Dict[str, Any]:
+    provider = STATE.get("llm_provider", "offline")
+    return {
+        "provider": provider,
+        "connected": provider != "offline" and bool(STATE.get("llm_api_key")),
+        "last_error": STATE.get("llm_last_error"),
+    }
+
+
+def _extract_json_blob(text: str) -> Optional[Any]:
+    """Best-effort extraction of a JSON object/array from a raw LLM response
+    (handles ```json fences and leading/trailing prose)."""
+    if not text:
+        return None
+    cleaned = text.strip()
+    cleaned = re.sub(r"^```(?:json)?\s*", "", cleaned)
+    cleaned = re.sub(r"\s*```$", "", cleaned)
+    try:
+        return json.loads(cleaned)
+    except Exception:
+        pass
+    match = re.search(r"(\{[\s\S]*\}|\[[\s\S]*\])", cleaned)
+    if match:
+        try:
+            return json.loads(match.group(1))
+        except Exception:
+            return None
+    return None
+
+
+def _call_openai(prompt: str, api_key: str) -> Optional[str]:
+    try:
+        resp = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+            json={
+                "model": "gpt-4o-mini",
+                "messages": [
+                    {"role": "system", "content": "You are a precise data architecture assistant. Always respond with valid JSON only, no prose."},
+                    {"role": "user", "content": prompt},
+                ],
+                "temperature": 0.4,
+                "max_tokens": 1500,
+            },
+            timeout=LLM_TIMEOUT_SECONDS,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["choices"][0]["message"]["content"]
+    except Exception as e:
+        STATE["llm_last_error"] = f"OpenAI request failed: {e}"
+        return None
+
+
+def _call_gemini(prompt: str, api_key: str) -> Optional[str]:
+    try:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+        resp = requests.post(
+            url,
+            headers={"Content-Type": "application/json"},
+            json={
+                "contents": [{"parts": [{"text": prompt}]}],
+                "generationConfig": {"temperature": 0.4, "maxOutputTokens": 1500},
+            },
+            timeout=LLM_TIMEOUT_SECONDS,
+        )
+        resp.raise_for_status()
+        data = resp.json()
+        return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        STATE["llm_last_error"] = f"Gemini request failed: {e}"
+        return None
+
+
+def _call_llm(prompt: str) -> Optional[str]:
+    provider = STATE.get("llm_provider", "offline")
+    api_key = STATE.get("llm_api_key")
+    if provider == "offline" or not api_key:
+        return None
+    if provider == "openai":
+        return _call_openai(prompt, api_key)
+    if provider == "gemini":
+        return _call_gemini(prompt, api_key)
+    return None
+
+
+def _llm_generate_questions(intent: str) -> Optional[Dict[str, Any]]:
+    prompt = f"""A user wants to generate a synthetic relational dataset for: "{intent}"
+
+Return ONLY a JSON object with this exact shape:
+{{"domain": "one short lowercase word for the domain, e.g. ecommerce/hr/financial/product/generic",
+  "questions": [
+    {{"question": "...?", "key": "complexity", "options": ["Minimal (2 tables)", "Standard (3 tables)", "Rich (5 tables)"]}},
+    {{"question": "...?", "key": "flavor", "options": ["...", "...", "..."]}},
+    {{"question": "...?", "key": "scale", "options": ["Small (~40 rows/table)", "Medium (~120 rows/table)", "Large (~400 rows/table)"]}}
+  ]}}
+
+The "complexity" and "scale" questions MUST keep exactly those option strings (only reorder is not needed).
+The "flavor" question's 3 options should be tailored to the specific domain/intent described above.
+No prose, no markdown fences — JSON only."""
+    raw = _call_llm(prompt)
+    parsed = _extract_json_blob(raw) if raw else None
+    if not isinstance(parsed, dict) or "questions" not in parsed:
+        return None
+    questions = parsed.get("questions")
+    if not isinstance(questions, list) or len(questions) < 2:
+        return None
+    for q in questions:
+        if not isinstance(q, dict) or "question" not in q or "options" not in q or "key" not in q:
+            return None
+    return {"domain": str(parsed.get("domain", "generic")).lower().strip() or "generic", "questions": questions}
+
+
+def _llm_generate_schema(intent: str, answers: Dict[str, str], domain: str) -> Optional[Dict[str, Any]]:
+    prompt = f"""Design a relational database schema for synthetic data generation.
+
+User intent: "{intent}"
+Domain: {domain}
+User preferences: {json.dumps(answers)}
+
+Return ONLY a JSON object with this exact shape (no prose, no markdown fences):
+{{"domain": "{domain}",
+  "tables": [
+    {{"name": "table_name", "columns": [{{"name": "col_name", "type": "INT|VARCHAR(255)|DECIMAL(10,2)|DATE|TIMESTAMP|BOOLEAN|TEXT", "description": "short description"}}], "primary_key": ["id_column"], "foreign_keys": [{{"column": "fk_column", "references": "other_table(other_pk)"}}]}}
+  ]}}
+
+Honor the user's complexity preference for table count (Minimal=2, Standard=3, Rich=5 tables) and make column
+names/types realistic for the domain. Every table needs an integer primary key column. Foreign keys must
+reference tables that are also included in the schema."""
+    raw = _call_llm(prompt)
+    parsed = _extract_json_blob(raw) if raw else None
+    if not isinstance(parsed, dict):
+        return None
+    try:
+        return normalize_schema(parsed)
+    except Exception:
+        return None
 
 
 # ----------------------------------------------------------------------------
@@ -178,14 +349,23 @@ QUESTION_BANK: Dict[str, List[Dict[str, Any]]] = {
 
 
 def generate_questions(intent: str) -> Dict[str, Any]:
-    domain = detect_domain(intent)
     STATE["intent"] = intent
-    STATE["domain"] = domain
     STATE["answers"] = {}
-    questions = QUESTION_BANK[domain]
+    STATE["questions_source"] = "offline"
+
+    llm_result = _llm_generate_questions(intent) if STATE.get("llm_provider", "offline") != "offline" else None
+    if llm_result:
+        domain = llm_result["domain"]
+        questions = llm_result["questions"]
+        STATE["questions_source"] = "llm"
+    else:
+        domain = detect_domain(intent)
+        questions = QUESTION_BANK.get(domain, QUESTION_BANK["generic"])
+
+    STATE["domain"] = domain
     STATE["questions"] = questions
     _reset_downstream("intent")
-    return {"domain": domain, "questions": questions}
+    return {"domain": domain, "questions": questions, "source": STATE["questions_source"]}
 
 
 def submit_answers(answers: Dict[str, str]) -> Dict[str, Any]:
@@ -547,14 +727,24 @@ def _relationships_from_tables(tables: List[Dict[str, Any]]) -> List[Dict[str, s
 
 def build_schema(intent: str, answers: Dict[str, str]) -> Dict[str, Any]:
     domain = STATE.get("domain") or detect_domain(intent)
+    scale_label = answers.get("scale", "Medium (~120 rows/table)")
+    rows_per_table = SCALE_ROWS.get(scale_label, 120)
+
+    if STATE.get("llm_provider", "offline") != "offline":
+        llm_schema = _llm_generate_schema(intent, answers, domain)
+        if llm_schema:
+            STATE["schema"] = llm_schema
+            STATE["schema_source"] = "llm"
+            STATE["rows_per_table"] = rows_per_table
+            _reset_downstream("schema")
+            return llm_schema
+        # Fall through to the offline template engine on any LLM failure.
+
     blueprint = TABLE_BLUEPRINTS.get(domain, TABLE_BLUEPRINTS["generic"])
 
     complexity_label = answers.get("complexity", "Standard (3 tables)")
     table_count = COMPLEXITY_TABLE_COUNT.get(complexity_label, 3)
     table_count = max(2, min(table_count, len(blueprint)))
-
-    scale_label = answers.get("scale", "Medium (~120 rows/table)")
-    rows_per_table = SCALE_ROWS.get(scale_label, 120)
 
     # Keep only tables whose foreign keys reference tables that are also included
     selected = blueprint[:table_count]
@@ -847,9 +1037,50 @@ def augmentation_summary() -> Dict[str, Any]:
 
 
 RULE_PATTERN = re.compile(
-    r"(increase|decrease|boost|reduce)\s+([a-zA-Z0-9_ ]+?)\s+by\s+(\d+(?:\.\d+)?)\s*%",
+    r"(increase|decrease|boost|reduce)\s+([a-zA-Z0-9_.` ]+?)\s+by\s+(\d+(?:\.\d+)?)\s*%",
     re.IGNORECASE,
 )
+
+
+def _normalize_col_token(text: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", text.strip().lower()).strip("_")
+
+
+def _find_target_columns(df: pd.DataFrame, raw_col: str) -> List[str]:
+    """Resolve a user-typed column phrase to actual numeric dataframe columns.
+
+    Tiered matching so ambiguous phrases ("price") don't silently grab the
+    wrong column, and so "orders.order_total" / "orders_order_total" style
+    table-qualified references (as produced by our own consolidation join)
+    resolve precisely:
+      1. Exact match (case-insensitive, ignoring punctuation)
+      2. Column ends with "_<token>" (e.g. "order_total" -> "orders_order_total")
+      3. Column contains "_<token>_" or starts with "<token>_" (word-boundary-ish)
+      4. Loose substring match (last resort)
+    Only the *first tier that yields any numeric match* is used — we never
+    silently fall through to a looser tier if a precise one already matched,
+    and within that tier we apply to *all* matching numeric columns rather
+    than arbitrarily picking the first, so e.g. "increase price by 10%" with
+    both "unit_price" and "list_price" present updates both consistently.
+    """
+    token = _normalize_col_token(raw_col)
+    if not token:
+        return []
+
+    normalized = {c: _normalize_col_token(c) for c in df.columns}
+
+    tiers: List[List[str]] = [
+        [c for c, n in normalized.items() if n == token],
+        [c for c, n in normalized.items() if n.endswith(f"_{token}") or n == token],
+        [c for c, n in normalized.items() if f"_{token}_" in f"_{n}_"],
+        [c for c, n in normalized.items() if token in n],
+    ]
+
+    for tier in tiers:
+        numeric_tier = [c for c in tier if pd.api.types.is_numeric_dtype(df[c])]
+        if numeric_tier:
+            return numeric_tier
+    return []
 
 
 def apply_business_rule(rule_text: str) -> Dict[str, Any]:
@@ -865,21 +1096,25 @@ def apply_business_rule(rule_text: str) -> Dict[str, Any]:
         }
 
     direction, raw_col, pct_str = match.groups()
+    raw_col = raw_col.strip().strip("`")
     pct = float(pct_str) / 100.0
     factor = 1 + pct if direction.lower() in ("increase", "boost") else 1 - pct
 
-    candidates = [c for c in df.columns if raw_col.strip().lower().replace(" ", "_") in c.lower()]
-    numeric_candidates = [c for c in candidates if pd.api.types.is_numeric_dtype(df[c])]
+    target_columns = _find_target_columns(df, raw_col)
+    if not target_columns:
+        return {"ok": False, "message": f"No numeric column matching '{raw_col}' was found."}
 
-    if not numeric_candidates:
-        return {"ok": False, "message": f"No numeric column matching '{raw_col.strip()}' was found."}
-
-    col = numeric_candidates[0]
-    df[col] = (df[col] * factor).round(2)
+    for col in target_columns:
+        df[col] = (df[col] * factor).round(2)
     STATE["augmented"] = df
-    message = f"Applied: {direction} '{col}' by {pct_str}% across {len(df)} rows."
+
+    if len(target_columns) == 1:
+        message = f"Applied: {direction} '{target_columns[0]}' by {pct_str}% across {len(df)} rows."
+    else:
+        cols_list = ", ".join(f"'{c}'" for c in target_columns)
+        message = f"Applied: {direction} {cols_list} by {pct_str}% across {len(df)} rows."
     STATE["last_rule_message"] = message
-    return {"ok": True, "message": message, "column": col}
+    return {"ok": True, "message": message, "columns": target_columns}
 
 
 def reset_augmentation() -> None:
@@ -902,6 +1137,7 @@ def get_status() -> Dict[str, Any]:
         "has_answers": bool(STATE.get("answers")),
         "has_schema": STATE.get("schema") is not None,
         "schema_source": STATE.get("schema_source"),
+        "questions_source": STATE.get("questions_source"),
         "table_count": len(STATE["schema"]["tables"]) if STATE.get("schema") else 0,
         "has_data": bool(tables) and any(len(v) for v in tables.values()),
         "table_names": list(tables.keys()),
@@ -910,6 +1146,7 @@ def get_status() -> Dict[str, Any]:
         "consolidated_cols": int(len(consolidated.columns)) if consolidated is not None else 0,
         "has_augmented": augmented is not None and not augmented.empty,
         "last_rule_message": STATE.get("last_rule_message"),
+        "llm": get_llm_status(),
     }
 
 
@@ -961,6 +1198,7 @@ def reset_all() -> None:
             "intent": None,
             "domain": None,
             "questions": [],
+            "questions_source": None,
             "answers": {},
             "schema": None,
             "schema_source": None,

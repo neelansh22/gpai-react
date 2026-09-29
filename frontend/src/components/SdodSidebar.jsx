@@ -1,5 +1,6 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
-import { Wand2, MessageSquareText, Network, PencilRuler, Database, Sparkles, ArrowLeft } from "lucide-react";
+import { Wand2, MessageSquareText, Network, PencilRuler, Database, Sparkles, ArrowLeft, Wifi, WifiOff } from "lucide-react";
 import { useSdodState } from "../state/SdodState";
 
 const NAV_ITEMS = [
@@ -27,7 +28,28 @@ function StatusPill({ label, active }) {
 }
 
 export default function SdodSidebar() {
-  const { status } = useSdodState();
+  const { status, setLlmConfig, notify } = useSdodState();
+  const llm = status.llm || { provider: "offline", connected: false, last_error: null };
+  const [provider, setProvider] = useState(llm.provider || "offline");
+  const [apiKey, setApiKey] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const data = await setLlmConfig(provider, apiKey || undefined);
+      if (provider !== "offline" && !data.connected) {
+        notify(data.last_error || "Could not connect to provider", "error");
+      } else {
+        notify(provider === "offline" ? "Switched to offline mode" : `Connected to ${provider}`, "success");
+      }
+      setApiKey("");
+    } catch (e) {
+      notify("Failed to update connector", "error");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <aside className="flex h-full w-72 shrink-0 flex-col border-r border-slate-800/70 bg-slate-950/80 px-4 py-6">
@@ -86,9 +108,48 @@ export default function SdodSidebar() {
         )}
       </div>
 
-      <p className="mt-4 px-2 text-[10px] leading-relaxed text-slate-600">
-        Fully offline demo — deterministic domain-aware generation, no API key required.
-      </p>
+      <div className="mt-4 space-y-2 rounded-2xl border border-slate-800/70 bg-slate-900/50 p-3">
+        <div className="mb-1 flex items-center justify-between">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+            AI Connector
+          </p>
+          {llm.connected ? (
+            <Wifi className="h-3.5 w-3.5 text-emerald-400" />
+          ) : (
+            <WifiOff className="h-3.5 w-3.5 text-slate-500" />
+          )}
+        </div>
+        <select
+          value={provider}
+          onChange={(e) => setProvider(e.target.value)}
+          className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-2 py-1.5 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
+        >
+          <option value="offline">Offline (template engine)</option>
+          <option value="openai">OpenAI (gpt-4o-mini)</option>
+          <option value="gemini">Google Gemini</option>
+        </select>
+        {provider !== "offline" && (
+          <input
+            type="password"
+            placeholder={llm.provider === provider && llm.connected ? "API key saved" : "API key"}
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-2 py-1.5 text-xs text-slate-200 focus:border-emerald-500 focus:outline-none"
+          />
+        )}
+        <button
+          onClick={handleSave}
+          disabled={saving}
+          className="w-full rounded-lg bg-emerald-500/90 px-2 py-1.5 text-xs font-semibold text-slate-950 transition hover:bg-emerald-400 disabled:opacity-60"
+        >
+          {saving ? "Saving..." : "Apply"}
+        </button>
+        <p className="pt-0.5 text-[10px] text-slate-500">
+          {llm.connected
+            ? `Online mode active (${llm.provider}).`
+            : "Offline mode — deterministic, no API key required."}
+        </p>
+      </div>
     </aside>
   );
 }
