@@ -1,0 +1,21 @@
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/dist-ssr/
+frontend/*.local
+
+# Python
+backend/**/__pycache__/
+backend/**/*.pyc
+backend/.venv/
+backend/venv/
+
+# Env files (keep .env.production as a committed placeholder/example)
+frontend/.env
+frontend/.env.local
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store

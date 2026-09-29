@@ -1,0 +1,46 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-slate-950 text-slate-100;
+  background-image: radial-gradient(circle at 20% 20%, rgba(14, 176, 245, 0.12), transparent 40%),
+    radial-gradient(circle at 80% 0%, rgba(168, 85, 247, 0.1), transparent 45%);
+  background-attachment: fixed;
+  font-family: system-ui, "Segoe UI", Roboto, sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.4);
+}
+
+.glass-panel {
+  @apply bg-slate-900/60 border border-slate-800/80 backdrop-blur-xl;
+}
+
+.unused-dark-mode-placeholder {
+  display: none;
+}
+
+body {
+  margin: 0;
+}
+
+
