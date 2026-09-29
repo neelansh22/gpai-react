@@ -21,11 +21,11 @@ export default function PricingSidebar() {
         </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
-            <p className="truncate text-sm font-semibold leading-tight text-white">Aerfin Analysis</p>
+            <p className="truncate text-sm font-semibold leading-tight text-white">AirThere Analysis</p>
             <Tooltip
               accent="sky"
               title="Dynamic Pricing Corridor"
-              content="Analyze part pricing corridors against cost and demand to find optimal price bands and flag outliers, backed by a synthetic Aerfin-style dataset."
+              content="Analyze part pricing corridors against cost and demand to find optimal price bands and flag outliers, backed by a synthetic AirThere-style dataset."
             />
           </div>
           <p className="text-xs text-slate-400">Dynamic Pricing Corridor</p>
@@ -74,10 +74,6 @@ export default function PricingSidebar() {
           {activeFilterCount > 0 ? `${activeFilterCount} filter(s) applied` : "None — showing all parts"}
         </p>
       </div>
-
-      <p className="mt-4 px-2 text-[10px] leading-relaxed text-slate-600">
-        Synthetic dataset generated to match Aerfin's Power BI pricing corridor schema.
-      </p>
     </aside>
   );
 }
