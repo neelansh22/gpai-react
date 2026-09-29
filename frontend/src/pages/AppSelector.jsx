@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { HeartPulse, LineChart, ArrowRight, Sparkles } from "lucide-react";
+import { HeartPulse, LineChart, ArrowRight, Sparkles, Wand2 } from "lucide-react";
 
 const APPS = [
   {
@@ -21,6 +21,15 @@ const APPS = [
     gradient: "from-purple-500 to-pink-400",
     tags: ["Scatter Analysis", "Trend Lines", "KPI Monitoring"],
   },
+  {
+    to: "/sdod",
+    icon: Wand2,
+    title: "Synthetic Data on Demand",
+    tagline: "Domain-Aware Dataset Generator",
+    desc: "Describe your data in plain English and get a full relational schema, generated tables, and an explorable, augmentable dataset — instantly.",
+    gradient: "from-emerald-500 to-teal-400",
+    tags: ["Schema Generation", "Synthetic Data", "Business Rules"],
+  },
 ];
 
 export default function AppSelector() {
@@ -37,11 +46,11 @@ export default function AppSelector() {
         </div>
         <h1 className="text-3xl font-bold text-white sm:text-4xl">Choose an Experience</h1>
         <p className="mt-3 max-w-xl text-sm text-slate-400">
-          Two interactive dashboards, one console. Pick an app below to explore.
+          Three interactive dashboards, one console. Pick an app below to explore.
         </p>
       </motion.div>
 
-      <div className="grid w-full max-w-4xl grid-cols-1 gap-6 sm:grid-cols-2">
+      <div className="grid w-full max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {APPS.map((app, idx) => (
           <motion.div
             key={app.to}

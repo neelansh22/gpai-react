@@ -18,8 +18,9 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 import pandas as pd
 import requests
-from fastapi import FastAPI, File, HTTPException, Query, UploadFile
+from fastapi import Body, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import Response
 from pydantic import BaseModel
 from sklearn.decomposition import TruncatedSVD
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -28,7 +29,7 @@ from sklearn.manifold import TSNE
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
-from . import pricing_corridor
+from . import pricing_corridor, sdod
 from .medical_database import get_medical_info
 
 app = FastAPI(title="GP's Assistant Diagnostician API", version="1.0.0")
@@ -89,6 +90,22 @@ class ThresholdRequest(BaseModel):
     green: List[int]
     amber: List[int]
     red: List[int]
+
+
+class SdodIntentRequest(BaseModel):
+    intent: str
+
+
+class SdodAnswersRequest(BaseModel):
+    answers: Dict[str, str]
+
+
+class SdodGenerateRequest(BaseModel):
+    rows_per_table: Optional[int] = None
+
+
+class SdodRuleRequest(BaseModel):
+    rule: str
 
 
 # ----------------------------------------------------------------------------
@@ -470,6 +487,116 @@ def pricing_class_pie(
     part_number: Optional[List[str]] = Query(None),
 ):
     return pricing_corridor.get_class_pie(part_class=part_class, condition=condition, year=year, part_number=part_number)
+
+
+# ----------------------------------------------------------------------------
+# Synthetic Data on Demand (SDoD) routes
+# ----------------------------------------------------------------------------
+@app.get("/api/sdod/status")
+def sdod_status():
+    return sdod.get_status()
+
+
+@app.post("/api/sdod/intent")
+def sdod_intent(req: SdodIntentRequest):
+    if not req.intent or not req.intent.strip():
+        raise HTTPException(status_code=400, detail="Please describe the dataset you want to generate.")
+    return sdod.generate_questions(req.intent.strip())
+
+
+@app.post("/api/sdod/answers")
+def sdod_answers(req: SdodAnswersRequest):
+    return sdod.submit_answers(req.answers)
+
+
+@app.post("/api/sdod/schema/generate")
+def sdod_schema_generate():
+    try:
+        schema = sdod.build_schema(sdod.STATE.get("intent") or "", sdod.STATE.get("answers") or {})
+        return schema
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/sdod/schema")
+def sdod_get_schema():
+    if not sdod.STATE.get("schema"):
+        raise HTTPException(status_code=404, detail="No schema generated yet")
+    return sdod.STATE["schema"]
+
+
+@app.put("/api/sdod/schema")
+def sdod_update_schema(schema: Dict[str, Any] = Body(...)):
+    try:
+        return sdod.update_schema(schema)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/sdod/schema/upload")
+def sdod_upload_schema(schema: Dict[str, Any] = Body(...)):
+    try:
+        return sdod.set_schema(schema, source="uploaded")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/sdod/generate")
+def sdod_generate(req: SdodGenerateRequest):
+    try:
+        sdod.generate_all_data(req.rows_per_table)
+        return sdod.get_status()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/sdod/data/preview")
+def sdod_data_preview(table: Optional[str] = None, limit: int = 25):
+    return sdod.preview_table(table, limit)
+
+
+@app.get("/api/sdod/data/consolidated")
+def sdod_data_consolidated(limit: int = 25):
+    return sdod.preview_consolidated(limit, augmented=True)
+
+
+@app.get("/api/sdod/data/export")
+def sdod_data_export(table: Optional[str] = None):
+    content = sdod.export_csv(table_name=table, consolidated=False)
+    filename = f"{table or 'table'}.csv"
+    return Response(content=content, media_type="text/csv", headers={"Content-Disposition": f"attachment; filename={filename}"})
+
+
+@app.get("/api/sdod/data/export-consolidated")
+def sdod_data_export_consolidated():
+    content = sdod.export_csv(consolidated=True, augmented=True)
+    return Response(
+        content=content,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=consolidated_dataset.csv"},
+    )
+
+
+@app.get("/api/sdod/augment/summary")
+def sdod_augment_summary():
+    return sdod.augmentation_summary()
+
+
+@app.post("/api/sdod/augment/rule")
+def sdod_augment_rule(req: SdodRuleRequest):
+    return sdod.apply_business_rule(req.rule)
+
+
+@app.post("/api/sdod/augment/reset")
+def sdod_augment_reset():
+    sdod.reset_augmentation()
+    return sdod.get_status()
+
+
+@app.post("/api/sdod/reset")
+def sdod_reset():
+    sdod.reset_all()
+    return {"reset": True}
 
 
 @app.post("/api/reset")
