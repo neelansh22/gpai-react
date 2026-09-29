@@ -6,11 +6,11 @@ import { Card, Metric, PageHeader } from "../components/ui";
 import { useAppState } from "../state/AppState";
 
 const STEPS = [
-  { to: "/data", icon: Database, title: "Data Ingestion", desc: "Load a symptom-to-disease dataset from URL or CSV upload." },
-  { to: "/process", icon: Cpu, title: "Process & Embed", desc: "Vectorize patient-report text into numerical embeddings." },
-  { to: "/clusters", icon: Boxes, title: "Cluster Visualization", desc: "Explore an interactive 3D t-SNE map of condition clusters." },
-  { to: "/train", icon: SlidersHorizontal, title: "Train Model", desc: "Fit a logistic regression diagnostic classifier." },
-  { to: "/diagnose", icon: Stethoscope, title: "Diagnose", desc: "Enter symptoms and get a confidence-scored diagnosis." },
+  { to: "/gpai/data", icon: Database, title: "Data Ingestion", desc: "Load a symptom-to-disease dataset from URL or CSV upload." },
+  { to: "/gpai/process", icon: Cpu, title: "Process & Embed", desc: "Vectorize patient-report text into numerical embeddings." },
+  { to: "/gpai/clusters", icon: Boxes, title: "Cluster Visualization", desc: "Explore an interactive 3D t-SNE map of condition clusters." },
+  { to: "/gpai/train", icon: SlidersHorizontal, title: "Train Model", desc: "Fit a logistic regression diagnostic classifier." },
+  { to: "/gpai/diagnose", icon: Stethoscope, title: "Diagnose", desc: "Enter symptoms and get a confidence-scored diagnosis." },
 ];
 
 export default function Overview() {
