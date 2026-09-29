@@ -5,8 +5,8 @@ frontend/dist-ssr/
 frontend/*.local
 
 # Python
-backend/**/__pycache__/
-backend/**/*.pyc
+**/__pycache__/
+**/*.pyc
 backend/.venv/
 backend/venv/
 
