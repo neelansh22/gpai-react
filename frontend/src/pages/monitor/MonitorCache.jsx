@@ -90,6 +90,53 @@ export default function MonitorCache() {
                 )}
               </ChartCard>
             </div>
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-3">
+              <ChartCard title="Estimated savings" tip="Each hit avoids one AeroDataBox call. Units per call vary by endpoint, so this counts calls, not billed units.">
+                <div className="text-3xl font-bold text-emerald-300">{io.hits}</div>
+                <p className="mt-1 text-sm text-slate-400">AeroDataBox calls avoided in this period.</p>
+                <p className="mt-3 text-sm text-slate-400">
+                  {io.misses + io.hits > 0
+                    ? `${io.hits} of ${io.hits + io.misses} lookups were served from cache.`
+                    : "No cache lookups recorded in this period."}
+                </p>
+              </ChartCard>
+              <ChartCard title="Storage footprint" tip="Size of the cached JSON payloads currently stored in the ApiCache table.">
+                <div className="text-3xl font-bold text-amber-300">{((state.total_bytes || 0) / 1024).toFixed(1)} KB</div>
+                <p className="mt-1 text-sm text-slate-400">across {state.entries} entries</p>
+              </ChartCard>
+              <ChartCard title="How to read this" tip="Definitions for the numbers on this page.">
+                <ul className="space-y-1.5 text-xs text-slate-400">
+                  <li><b className="text-emerald-300">Hit</b>: answer found in the table (200).</li>
+                  <li><b className="text-rose-300">Miss</b>: not found (404), so AeroDataBox was called.</li>
+                  <li><b className="text-amber-300">Write</b>: result stored for next time (204).</li>
+                  <li><b className="text-slate-200">Warm</b>: entry not yet past its expiry.</li>
+                </ul>
+              </ChartCard>
+            </div>
+
+            <div className="mt-6">
+              <ChartCard title="Most recent entries" tip="Latest cached lookups with their age and time until expiry.">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs">
+                    <thead className="text-slate-500">
+                      <tr><th className="py-2">Key</th><th>Type</th><th>Stored</th><th>Expires in</th><th>Size</th><th>State</th></tr>
+                    </thead>
+                    <tbody>
+                      {(state.items || []).map((e) => (
+                        <tr key={e.key} className="border-t border-slate-800 text-slate-300">
+                          <td className="max-w-[320px] truncate py-1.5 font-mono">{e.key}</td>
+                          <td>{e.type}</td>
+                          <td>{e.stored ? new Date(e.stored).toLocaleString() : "—"}</td>
+                          <td>{e.expires_in_min == null ? "—" : e.expires_in_min > 0 ? `${e.expires_in_min} min` : "expired"}</td>
+                          <td>{e.size_bytes} B</td>
+                          <td className={e.warm ? "text-emerald-300" : "text-amber-300"}>{e.warm ? "warm" : "expired"}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </ChartCard>
+            </div>
             <p className="mt-4 text-xs text-slate-500">{io.note}</p>
           </>
         )

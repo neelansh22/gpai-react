@@ -136,21 +136,24 @@ def usage(range: str = Query("7d")) -> Dict[str, Any]:
     tools = _kql(
         f"""AppRequests | where TimeGenerated > ago({ago}) and Url contains 'azurewebsites'
         | summarize calls=count(), p50=percentile(DurationMs,50), p95=percentile(DurationMs,95),
-                    failures=countif(Success == false) by tool=Name | order by calls desc"""
+                    failures=countif(Success == false) by endpoint=Name | order by calls desc
+        | project-rename tool=endpoint"""
     )
     series = _kql(
         f"""AppRequests | where TimeGenerated > ago({ago}) and Url contains 'azurewebsites'
-        | summarize calls=count() by bucket=bin(TimeGenerated, {'1h' if ago == '1d' else '1d'}), tool=Name
-        | order by bucket asc"""
+        | summarize calls=count() by bucket=bin(TimeGenerated, {'1h' if ago == '1d' else '1d'}), endpoint=Name
+        | order by bucket asc
+        | project-rename tool=endpoint"""
     )
     agent = _kql(
         f"""AppDependencies | where TimeGenerated > ago({ago})
-        | extend kind = case(Name startswith 'execute_tool', 'tool call',
+        | extend category = case(Name startswith 'execute_tool', 'tool call',
                              Name startswith 'chat', 'model turn',
                              Name startswith 'text_to_speech', 'speech out',
                              Name startswith 'speech_to_text', 'speech in', 'other')
-        | where kind != 'other'
-        | summarize calls=count(), avg_ms=avg(DurationMs) by kind, name=Name | order by calls desc"""
+        | where category != 'other'
+        | summarize calls=count(), avg_ms=avg(DurationMs) by category, span=Name | order by calls desc
+        | project-rename kind=category, name=span"""
     )
     return {"range": range, "tools": tools, "series": series, "agent": agent}
 
@@ -172,10 +175,26 @@ def cache(range: str = Query("7d")) -> Dict[str, Any]:
     rows = _cache_rows()
     by_type: Counter = Counter()
     warm = 0
+    entries: List[Dict[str, Any]] = []
     for row in rows:
-        by_type[(row.get("Key") or "unknown").split("|")[0]] += 1
-        if float(row.get("ExpiresAt") or 0) > now:
+        key = row.get("Key") or "unknown"
+        by_type[key.split("|")[0]] += 1
+        try:
+            exp = float(row.get("ExpiresAt") or 0)
+        except (TypeError, ValueError):
+            exp = 0.0
+        is_warm = exp > now
+        if is_warm:
             warm += 1
+        entries.append({
+            "key": key,
+            "type": key.split("|")[0],
+            "stored": row.get("Timestamp"),
+            "expires_in_min": round((exp - now) / 60) if exp else None,
+            "warm": is_warm,
+            "size_bytes": len(row.get("Payload") or ""),
+        })
+    entries.sort(key=lambda e: e.get("stored") or "", reverse=True)
     return {
         "range": range,
         "io": {
@@ -185,7 +204,8 @@ def cache(range: str = Query("7d")) -> Dict[str, Any]:
             "hit_rate": round(hits / lookups, 3) if lookups else None,
             "note": "Approximation from Table Storage response codes (200 = hit, 404 = miss, 204 = write).",
         },
-        "state": {"entries": len(rows), "warm": warm, "expired": len(rows) - warm, "by_type": dict(by_type)},
+        "state": {"entries": len(rows), "warm": warm, "expired": len(rows) - warm, "by_type": dict(by_type),
+                  "items": entries[:100], "total_bytes": sum(e["size_bytes"] for e in entries)},
     }
 
 
