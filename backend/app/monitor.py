@@ -82,7 +82,7 @@ def _kql(query: str) -> List[Dict[str, Any]]:
     except Exception as e:  # credential or network failure
         raise HTTPException(status_code=502, detail=f"Log Analytics unreachable: {e}")
     if r.status_code != 200:
-        raise HTTPException(status_code=502, detail=f"Log Analytics error {r.status_code}: {r.text[:200]}")
+        raise HTTPException(status_code=502, detail=f"Log Analytics error {r.status_code}: {r.text[:900]}")
     t = r.json()["tables"][0]
     cols = [c["name"] for c in t["columns"]]
     return [dict(zip(cols, row)) for row in t["rows"]]
@@ -96,7 +96,7 @@ def _cache_rows(limit: int = 5000) -> List[Dict[str, Any]]:
         "Accept": "application/json;odata=nometadata",
     }
     url = f"https://{STORAGE_ACCOUNT}.table.core.windows.net/{TABLE_NAME}()"
-    params: Dict[str, Any] = {"$select": "Key,Timestamp,ExpiresAt", "$top": 1000}
+    params: Dict[str, Any] = {"$select": "Key,Timestamp,ExpiresAt,Payload", "$top": 1000}
     rows: List[Dict[str, Any]] = []
     while len(rows) < limit:
         try:
@@ -133,28 +133,38 @@ def status() -> Dict[str, Any]:
 def usage(range: str = Query("7d")) -> Dict[str, Any]:
     """Calls, latency and failures per Function endpoint, plus agent-side tool and model activity."""
     ago = _range(range)
+    step = "1h" if ago == "1d" else "1d"
     tools = _kql(
-        f"""AppRequests | where TimeGenerated > ago({ago}) and Url contains 'azurewebsites'
-        | summarize calls=count(), p50=percentile(DurationMs,50), p95=percentile(DurationMs,95),
-                    failures=countif(Success == false) by endpoint=Name | order by calls desc
-        | project-rename tool=endpoint"""
+        f"AppRequests | where TimeGenerated > ago({ago}) | where Url contains 'azurewebsites' "
+        "| summarize calls=count(), p50=percentile(DurationMs, 50), p95=percentile(DurationMs, 95), "
+        "failures=countif(tostring(Success) =~ 'false') by Name | order by calls desc"
     )
+    for r in tools:
+        r["tool"] = r.get("Name")
     series = _kql(
-        f"""AppRequests | where TimeGenerated > ago({ago}) and Url contains 'azurewebsites'
-        | summarize calls=count() by bucket=bin(TimeGenerated, {'1h' if ago == '1d' else '1d'}), endpoint=Name
-        | order by bucket asc
-        | project-rename tool=endpoint"""
+        f"AppRequests | where TimeGenerated > ago({ago}) | where Url contains 'azurewebsites' "
+        f"| summarize calls=count() by bucket=bin(TimeGenerated, {step}), Name | order by bucket asc"
     )
+    for r in series:
+        r["tool"] = r.get("Name")
     agent = _kql(
-        f"""AppDependencies | where TimeGenerated > ago({ago})
-        | extend category = case(Name startswith 'execute_tool', 'tool call',
-                             Name startswith 'chat', 'model turn',
-                             Name startswith 'text_to_speech', 'speech out',
-                             Name startswith 'speech_to_text', 'speech in', 'other')
-        | where category != 'other'
-        | summarize calls=count(), avg_ms=avg(DurationMs) by category, span=Name | order by calls desc
-        | project-rename kind=category, name=span"""
+        f"AppDependencies | where TimeGenerated > ago({ago}) "
+        "| summarize calls=count(), avg_ms=avg(DurationMs) by Name | order by calls desc"
     )
+    labels = (
+        ("execute_tool", "tool call"),
+        ("chat", "model turn"),
+        ("text_to_speech", "speech out"),
+        ("speech_to_text", "speech in"),
+    )
+    agent_rows = []
+    for r in agent:
+        nm = r.get("Name") or ""
+        for prefix, label in labels:
+            if nm.startswith(prefix):
+                agent_rows.append({"kind": label, "name": nm, "calls": r["calls"], "avg_ms": r["avg_ms"]})
+                break
+    agent = agent_rows
     return {"range": range, "tools": tools, "series": series, "agent": agent}
 
 
