@@ -6,6 +6,7 @@ const ACCENTS = {
   brand: { bar: "from-brand-400 to-purple-500", ring: "ring-brand-500/30", text: "text-brand-300" },
   sky: { bar: "from-sky-400 to-cyan-500", ring: "ring-sky-500/30", text: "text-sky-300" },
   emerald: { bar: "from-emerald-400 to-teal-500", ring: "ring-emerald-500/30", text: "text-emerald-300" },
+  amber: { bar: "from-amber-400 to-orange-500", ring: "ring-amber-500/30", text: "text-amber-300" },
 };
 
 const GAP = 10;

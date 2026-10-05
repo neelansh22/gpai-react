@@ -25,6 +25,12 @@ import SchemaBuilder from "./pages/sdod/SchemaBuilder";
 import SchemaEditor from "./pages/sdod/SchemaEditor";
 import GenerateData from "./pages/sdod/GenerateData";
 import AugmentExplore from "./pages/sdod/AugmentExplore";
+import { MonitorStateProvider } from "./state/MonitorState";
+import MonitorSidebar from "./components/MonitorSidebar";
+import MonitorOverview from "./pages/monitor/MonitorOverview";
+import MonitorCache from "./pages/monitor/MonitorCache";
+import MonitorUsage from "./pages/monitor/MonitorUsage";
+import MonitorHeatmap from "./pages/monitor/MonitorHeatmap";
 
 function GpaiLayout() {
   return (
@@ -93,6 +99,26 @@ function SdodLayout() {
   );
 }
 
+function MonitorLayout() {
+  return (
+    <MonitorStateProvider>
+      <div className="flex h-screen w-full overflow-hidden">
+        <MonitorSidebar />
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-6xl px-6 py-8 md:px-10">
+            <Routes>
+              <Route index element={<MonitorOverview />} />
+              <Route path="cache" element={<MonitorCache />} />
+              <Route path="usage" element={<MonitorUsage />} />
+              <Route path="heatmap" element={<MonitorHeatmap />} />
+            </Routes>
+          </div>
+        </main>
+      </div>
+    </MonitorStateProvider>
+  );
+}
+
 function App() {
   return (
     <HashRouter>
@@ -101,6 +127,7 @@ function App() {
         <Route path="/sdod/*" element={<SdodLayout />} />
         <Route path="/gpai/*" element={<GpaiLayout />} />
         <Route path="/pricing/*" element={<PricingLayout />} />
+        <Route path="/monitor/*" element={<MonitorLayout />} />
       </Routes>
     </HashRouter>
   );

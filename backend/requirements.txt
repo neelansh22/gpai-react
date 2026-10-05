@@ -6,3 +6,4 @@ scikit-learn==1.5.1
 requests==2.32.3
 python-multipart==0.0.9
 pydantic==2.8.2
+azure-identity==1.19.0

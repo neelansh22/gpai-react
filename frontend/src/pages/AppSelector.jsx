@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { HeartPulse, LineChart, ArrowRight, Sparkles, Wand2 } from "lucide-react";
+import { HeartPulse, LineChart, ArrowRight, Sparkles, Wand2, Radar } from "lucide-react";
 
 const APPS = [
   {
@@ -30,6 +30,15 @@ const APPS = [
     gradient: "from-emerald-500 to-teal-400",
     tags: ["Schema Generation", "Synthetic Data", "Business Rules"],
   },
+  {
+    to: "/monitor",
+    icon: Radar,
+    title: "Skyline Monitor",
+    tagline: "Voice Agent Observability",
+    desc: "Track cache efficiency, API usage and airport demand for the Skyline voice travel agent, straight from Azure telemetry.",
+    gradient: "from-amber-500 to-orange-400",
+    tags: ["Cache Analytics", "API Usage", "Airport Heatmap"],
+  },
 ];
 
 export default function AppSelector() {
@@ -46,11 +55,11 @@ export default function AppSelector() {
         </div>
         <h1 className="text-3xl font-bold text-white sm:text-4xl">Choose an Experience</h1>
         <p className="mt-3 max-w-xl text-sm text-slate-400">
-          Three interactive dashboards, one console. Pick an app below to explore.
+          Four interactive dashboards, one console. Pick an app below to explore.
         </p>
       </motion.div>
 
-      <div className="grid w-full max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid w-full max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2">
         {APPS.map((app, idx) => (
           <motion.div
             key={app.to}
