@@ -3,7 +3,7 @@ import { createContext, useContext, useState } from "react";
 const MonitorContext = createContext(null);
 
 export function MonitorStateProvider({ children }) {
-  const [range, setRange] = useState("7d");
+  const [range, setRange] = useState("30d");
   const [refreshTick, setRefreshTick] = useState(0);
   const refresh = () => setRefreshTick((t) => t + 1);
 

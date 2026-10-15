@@ -130,7 +130,7 @@ def status() -> Dict[str, Any]:
 
 
 @router.get("/usage", dependencies=[Depends(require_access)])
-def usage(range: str = Query("7d")) -> Dict[str, Any]:
+def usage(range: str = Query("30d")) -> Dict[str, Any]:
     """Calls, latency and failures per Function endpoint, plus agent-side tool and model activity."""
     ago = _range(range)
     step = "1h" if ago == "1d" else "1d"
@@ -169,7 +169,7 @@ def usage(range: str = Query("7d")) -> Dict[str, Any]:
 
 
 @router.get("/cache", dependencies=[Depends(require_access)])
-def cache(range: str = Query("7d")) -> Dict[str, Any]:
+def cache(range: str = Query("30d")) -> Dict[str, Any]:
     """Cache I/O from Table Storage traffic (approximation) and live cache state from the table."""
     ago = _range(range)
     io = _kql(

@@ -172,15 +172,15 @@ def get_scatter_data(**filters) -> Dict[str, Any]:
     df = _apply_filters(DATASET, **filters)
     points = [
         {
-            "x": float(r.InvoiceUnitPrice),
-            "y": float(r.AmberPrice),
-            "green": float(r.GreenPrice),
-            "red": float(r.RedPrice),
-            "corridor": r.Corridor,
-            "part_number": r.PartNumber,
-            "part_class": r.PartClassDescription,
+            "x": float(r["InvoiceUnitPrice"]),
+            "y": float(r["AmberPrice"]),
+            "green": float(r["GreenPrice"]),
+            "red": float(r["RedPrice"]),
+            "corridor": r["Corridor"],
+            "part_number": r["PartNumber"],
+            "part_class": r["PartClassDescription"],
         }
-        for r in df.itertuples()
+        for r in df.to_dict("records")
     ]
     return {"points": points, "count": len(points)}
 
@@ -203,14 +203,14 @@ def get_corridor_table(**filters) -> Dict[str, Any]:
     )
     rows = [
         {
-            "corridor": r.Corridor,
-            "part_count": int(r.part_count),
-            "invoice_sum": round(float(r.invoice_sum), 2),
-            "red_sum": round(float(r.red_sum), 2),
-            "amber_sum": round(float(r.amber_sum), 2),
-            "green_sum": round(float(r.green_sum), 2),
+            "corridor": r["Corridor"],
+            "part_count": int(r["part_count"]),
+            "invoice_sum": round(float(r["invoice_sum"]), 2),
+            "red_sum": round(float(r["red_sum"]), 2),
+            "amber_sum": round(float(r["amber_sum"]), 2),
+            "green_sum": round(float(r["green_sum"]), 2),
         }
-        for r in grouped.itertuples()
+        for r in grouped.to_dict("records")
     ]
     return {"rows": rows}
 
@@ -232,14 +232,14 @@ def get_trend_data(**filters) -> Dict[str, Any]:
     )
     series = [
         {
-            "part_class": r.PartClassDescription,
-            "year": int(r.YearInvoiced),
-            "invoice_avg": round(float(r.invoice_avg), 2),
-            "red_avg": round(float(r.red_avg), 2),
-            "amber_avg": round(float(r.amber_avg), 2),
-            "green_avg": round(float(r.green_avg), 2),
+            "part_class": r["PartClassDescription"],
+            "year": int(r["YearInvoiced"]),
+            "invoice_avg": round(float(r["invoice_avg"]), 2),
+            "red_avg": round(float(r["red_avg"]), 2),
+            "amber_avg": round(float(r["amber_avg"]), 2),
+            "green_avg": round(float(r["green_avg"]), 2),
         }
-        for r in grouped.itertuples()
+        for r in grouped.to_dict("records")
     ]
     return {"series": series}
 
@@ -255,8 +255,12 @@ def get_yearly_bar(**filters) -> Dict[str, Any]:
         .sort_values("YearInvoiced")
     )
     bars = [
-        {"year": int(r.YearInvoiced), "part_count": int(r.part_count), "invoice_sum": round(float(r.invoice_sum), 2)}
-        for r in grouped.itertuples()
+        {
+            "year": int(r["YearInvoiced"]),
+            "part_count": int(r["part_count"]),
+            "invoice_sum": round(float(r["invoice_sum"]), 2),
+        }
+        for r in grouped.to_dict("records")
     ]
     return {"bars": bars}
 
@@ -266,5 +270,5 @@ def get_class_pie(**filters) -> Dict[str, Any]:
     if df.empty:
         return {"slices": []}
     grouped = df.groupby("PartClassDescription").size().reset_index(name="count").sort_values("count", ascending=False)
-    slices = [{"label": r.PartClassDescription, "value": int(r.count)} for r in grouped.itertuples()]
+    slices = [{"label": r["PartClassDescription"], "value": int(r["count"])} for r in grouped.to_dict("records")]
     return {"slices": slices}

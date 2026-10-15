@@ -756,7 +756,7 @@ def build_schema(intent: str, answers: Dict[str, str]) -> Dict[str, Any]:
             "columns": [dict(c) for c in t["columns"]],
             "primary_key": list(t["primary_key"]),
             "foreign_keys": [
-                dict(fk) for fk in t["foreign_keys"] if re.match(r"^(\w+)\(", fk["references"]).group(1) in selected_names
+                dict(fk) for fk in t["foreign_keys"] if re.match(r"^(\w+)\(", fk["references"]).group(1) in selected_names # type: ignore
             ],
         }
         tables.append(t_copy)
@@ -914,7 +914,7 @@ def generate_all_data(rows_per_table: Optional[int] = None) -> Dict[str, List[Di
                     record[col_name] = _next_id(f"{table_name}.{col_name}")
                     continue
                 if col_name in fk_map:
-                    ref_table = re.match(r"^(\w+)\(", fk_map[col_name]).group(1)
+                    ref_table = re.match(r"^(\w+)\(", fk_map[col_name]).group(1) # type: ignore
                     pool = pk_pools.get(ref_table)
                     record[col_name] = random.choice(pool) if pool else None
                     continue
