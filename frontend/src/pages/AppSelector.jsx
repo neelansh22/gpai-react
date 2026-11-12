@@ -57,19 +57,20 @@ export default function AppSelector() {
           <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-700 bg-slate-900">
             <Sparkles className="h-4 w-4 text-sky-300" aria-hidden="true" />
           </span>
-          Projects & experiments
+          Portfolio
         </div>
-        <span className="text-xs text-slate-500">A collection of working ideas</span>
+        <span className="text-right text-xs text-slate-500">An engineered approach towards AI alignment.</span>
       </header>
 
       <section className="max-w-3xl py-16 sm:py-20" aria-labelledby="portfolio-heading">
         <p className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-sky-300">Ideas, built and explored</p>
         <h1 id="portfolio-heading" className="text-4xl font-semibold leading-tight tracking-tight text-white sm:text-5xl">
-          A little bit of what’s possible.
+          Programme Heavy Harness
         </h1>
         <p className="mt-5 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
-          A collection of practical experiments spanning AI, data and software.
-          Built with curiosity, collaboration and a little help from AI.
+          These proofs of concept combine thoughtful software engineering, compact models
+          and deliberate design, with room for larger AI models where they add value.
+          The focus is on privacy, practical outcomes and using tokens economically.
         </p>
       </section>
 
