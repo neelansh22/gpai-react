@@ -31,9 +31,7 @@ import MonitorOverview from "./pages/monitor/MonitorOverview";
 import MonitorCache from "./pages/monitor/MonitorCache";
 import MonitorUsage from "./pages/monitor/MonitorUsage";
 import MonitorHeatmap from "./pages/monitor/MonitorHeatmap";
-import PiiSidebar from "./components/PiiSidebar";
-import PiiOverview from "./pages/pii/PiiOverview";
-import PiiPlayground from "./pages/pii/PiiPlayground";
+import PiiConsole from "./intpii/App";
 
 function GpaiLayout() {
   return (
@@ -123,19 +121,7 @@ function MonitorLayout() {
 }
 
 function PiiLayout() {
-  return (
-    <div className="flex h-screen w-full overflow-hidden">
-      <PiiSidebar />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-6 py-8 md:px-10">
-          <Routes>
-            <Route index element={<PiiOverview />} />
-            <Route path="playground" element={<PiiPlayground />} />
-          </Routes>
-        </div>
-      </main>
-    </div>
-  );
+  return <PiiConsole />;
 }
 
 function App() {

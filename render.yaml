@@ -11,3 +11,15 @@ services:
         value: 3.11.9
       - key: ALLOWED_ORIGINS
         sync: false
+  - type: web
+    name: int-pii-backend
+    runtime: python
+    plan: free
+    rootDir: backend
+    buildCommand: pip install -r pii-requirements.txt
+    startCommand: uvicorn app.pii_main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: ALLOWED_ORIGINS
+        sync: false

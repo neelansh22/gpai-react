@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import statistics
-import sys
 import threading
 import time
 from pathlib import Path
@@ -22,9 +21,7 @@ SWEEP_FLOOR = 0.05
 
 
 def _eval_modules():
-    if str(EVAL_DIR) not in sys.path:
-        sys.path.insert(0, str(EVAL_DIR))
-    import metrics, synth, tagged  # noqa: E401
+    from .evaluation import metrics, synth, tagged
     return metrics, synth, tagged
 
 

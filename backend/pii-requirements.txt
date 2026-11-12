@@ -1,0 +1,14 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.15.0+cpu
+gliner==0.2.30
+huggingface_hub==2.4.0
+numpy==2.5.4
+onnxruntime==1.31.1
+tokenizers==0.23.3
+transformers==5.22.2
+fastapi==0.162.5
+uvicorn==0.54.0
+python-docx==1.2.0
+pypdfium2==5.15.2
+pillow==13.0.0
+lxml==6.1.3

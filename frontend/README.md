@@ -1,5 +1,29 @@
 # React + Vite
 
+## int-pii portfolio demo
+
+The PII console at `/#/pii` uses a separate Render service, not the existing
+`gpai-backend`. Provision `int-pii-backend` using the entry in `render.yaml`,
+set its `ALLOWED_ORIGINS` to the exact Vercel origin(s), and configure the
+frontend's `VITE_PII_API_URL` in Vercel to the new service's HTTPS URL. Redeploy
+the frontend after setting this build-time variable. Until both services and
+the variable are configured, the hosted PII demo will not work. The free plan
+has limited memory; if model loading fails or the service restarts, check the
+Render logs and upgrade the isolated service if necessary.
+
+For local development, start `uvicorn app.pii_main:app --host 127.0.0.1 --port
+8001` from `backend` using the dependencies in `pii-requirements.txt`, and run
+the frontend normally. The frontend defaults to `http://localhost:8001` only
+in development. Configure `ALLOWED_ORIGINS` when using a different frontend
+origin.
+
+This is a public demonstration, not a secure PII processing service. Use
+synthetic data only. Files are sent to the server and retained in memory for
+approximately 30 minutes or until discarded; a restart also clears sessions.
+Uploaded filenames may appear in service access logs.
+Evaluation uses synthetic data only. It runs in a background job, one at a
+time, and results are temporary. Saved run summaries are held in memory.
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

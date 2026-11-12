@@ -64,7 +64,7 @@ export default function AppSelector() {
         </div>
         <h1 className="text-3xl font-bold text-white sm:text-4xl">Choose an Experience</h1>
         <p className="mt-3 max-w-xl text-sm text-slate-400">
-          Four interactive dashboards, one console. Pick an app below to explore.
+          Five interactive dashboards, one console. Pick an app below to explore.
         </p>
       </motion.div>
 
