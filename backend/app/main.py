@@ -30,6 +30,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 
 from . import monitor, pricing_corridor, sdod
+from . import intpii_routes
 from .medical_database import get_medical_info
 
 app = FastAPI(title="GP's Assistant Diagnostician API", version="1.0.0")
@@ -48,6 +49,7 @@ app.add_middleware(
 )
 
 app.include_router(monitor.router)
+app.include_router(intpii_routes.router)
 
 # ----------------------------------------------------------------------------
 # In-memory application state (single-user local demo, mirrors st.session_state)

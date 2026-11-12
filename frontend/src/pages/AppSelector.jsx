@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
-import { HeartPulse, LineChart, ArrowRight, Sparkles, Wand2, Radar } from "lucide-react";
+import { HeartPulse, LineChart, ArrowRight, Sparkles, Wand2, Radar, ShieldCheck } from "lucide-react";
 
 const APPS = [
   {
@@ -38,6 +38,15 @@ const APPS = [
     desc: "Track cache efficiency, API usage and airport demand for the Skyline voice travel agent, straight from Azure telemetry.",
     gradient: "from-amber-500 to-orange-400",
     tags: ["Cache Analytics", "API Usage", "Airport Heatmap"],
+  },
+  {
+    to: "/pii",
+    icon: ShieldCheck,
+    title: "int-pii",
+    tagline: "PII Detection & Redaction",
+    desc: "A hybrid regex + GLiNER (ONNX) pipeline that finds names, emails, phone numbers and more in text or documents — then redacts them in place.",
+    gradient: "from-rose-500 to-orange-400",
+    tags: ["NER", "ONNX Runtime", "Document Redaction"],
   },
 ];
 
