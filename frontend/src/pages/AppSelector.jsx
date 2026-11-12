@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { HeartPulse, LineChart, ArrowUpRight, Wand2, Radar, ShieldCheck, Sparkles } from "lucide-react";
+import { HeartPulse, LineChart, ArrowUpRight, Wand2, Radar, ShieldCheck, Sparkles, Network } from "lucide-react";
 
 const APPS = [
   {
@@ -46,6 +46,15 @@ const APPS = [
     desc: "Detect, review and redact personal information using rules and a compact language model.",
     accent: "text-rose-300 bg-rose-400/10 ring-rose-400/20",
     tags: ["Entity recognition", "Documents", "ONNX"],
+  },
+  {
+    to: "/kg-bi",
+    icon: Network,
+    title: "kg-bi",
+    tagline: "Knowledge intelligence",
+    desc: "Explore how support conversations can become an evidence-backed, interactive knowledge graph.",
+    accent: "text-teal-300 bg-teal-400/10 ring-teal-400/20",
+    tags: ["Knowledge graphs", "Automotive", "Synthetic demo"],
   },
 ];
 

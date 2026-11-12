@@ -1,5 +1,18 @@
 # React + Vite
 
+## kg-bi concept demo
+
+The portfolio's `/#/kg-bi` page illustrates an automotive support knowledge
+graph using fictional conversations and predefined entities and relationships.
+Select graph nodes or links to inspect examples, filter entity types, switch
+conversation excerpts, and confirm or reject proposed links. Changes are
+temporary and reset when the page is reloaded or the sample is reset.
+
+This is a frontend-only concept: it does not ingest conversations, perform
+live NER or PII detection, persist a graph, or provide an agent-memory API.
+The illustrated workflow and agent memory are future possibilities, not
+implemented services. Do not enter real customer data into the demo.
+
 ## int-pii portfolio demo
 
 The PII console at `/#/pii` uses a separate Render service, not the existing
