@@ -6,6 +6,18 @@ function url(path: string): string {
   return `${API_BASE.replace(/\/$/, "")}/api/pii${path}`;
 }
 
+async function request(path: string, init?: RequestInit): Promise<Response> {
+  const endpoint = url(path);
+  try {
+    return await fetch(endpoint, init);
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error("Cannot reach the PII service. It may be starting or temporarily unavailable, or the browser may be blocking the connection. Please retry.", { cause: error });
+    }
+    throw error;
+  }
+}
+
 function utf16Offsets(text: string): number[] {
   const offsets = [0];
   for (const char of text) offsets.push(offsets[offsets.length - 1] + char.length);
@@ -33,7 +45,7 @@ async function job<T>(kind: "eval" | "sweep", payload: Record<string, unknown>):
 }
 
 async function call<T>(path: string, body?: unknown): Promise<T> {
-  const r = await fetch(url(path), body === undefined ? undefined : {
+  const r = await request(path, body === undefined ? undefined : {
     method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
   });
   if (!r.ok) {
@@ -58,7 +70,7 @@ async function fail(r: Response): Promise<never> {
 export const redact = {
   analyze: async (file: File, mode: Mode, threshold: number): Promise<RedactAnalysis> => {
     const q = new URLSearchParams({ filename: file.name, mode, threshold: String(threshold), size: modelSize.get() });
-    const r = await fetch(url(`/redact/analyze?${q}`), { method: "POST", body: file });
+    const r = await request(`/redact/analyze?${q}`, { method: "POST", body: file });
     if (!r.ok) return fail(r);
     const result: RedactAnalysis = await r.json();
     const units = new Map(result.units.map((unit) => [unit.id, unit.text]));
@@ -78,7 +90,7 @@ export const redact = {
       if (text === undefined) throw new Error("Manual redaction references an unknown document unit");
       return { ...span, start: Array.from(text.slice(0, span.start)).length, end: Array.from(text.slice(0, span.end)).length };
     });
-    const r = await fetch(url("/redact/export"), {
+    const r = await request("/redact/export", {
       method: "POST", headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ doc_id: docId, style, rejected, added: serverSpans }),
     });
@@ -87,7 +99,7 @@ export const redact = {
     return { blob: await r.blob(), name: m ? m[1] : "redacted" };
   },
   discard: async (docId: string) => {
-    const response = await fetch(url(`/redact/${docId}`), { method: "DELETE" });
+    const response = await request(`/redact/${docId}`, { method: "DELETE" });
     if (!response.ok) return fail(response);
     documents.delete(docId);
   },

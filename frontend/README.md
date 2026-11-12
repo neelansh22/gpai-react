@@ -11,6 +11,14 @@ the variable are configured, the hosted PII demo will not work. The free plan
 has limited memory; if model loading fails or the service restarts, check the
 Render logs and upgrade the isolated service if necessary.
 
+The PII service permits the production Vercel origin by default. If
+`ALLOWED_ORIGINS` is set in Render, it replaces that default: include the exact
+frontend origin in its comma-separated list. A failed Render proxy response
+may also appear in the browser as a CORS error because it can be returned
+before the application adds CORS headers. Check the service logs and retry
+after a cold start or restart rather than assuming every such error is an
+origin configuration issue.
+
 For local development, start `uvicorn app.pii_main:app --host 127.0.0.1 --port
 8001` from `backend` using the dependencies in `pii-requirements.txt`, and run
 the frontend normally. The frontend defaults to `http://localhost:8001` only

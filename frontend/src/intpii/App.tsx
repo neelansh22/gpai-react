@@ -20,6 +20,7 @@ export default function App() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [result, setResult] = useState<EvalResult | null>(null);
   const [size, setSize] = useState(modelSize.get());
+  const [retry, setRetry] = useState(0);
 
   useEffect(() => {
     let stop = false;
@@ -34,7 +35,7 @@ export default function App() {
     poll();
     const timer = window.setInterval(poll, 30000);
     return () => { stop = true; window.clearInterval(timer); };
-  }, []);
+  }, [retry]);
 
   return (
     <div className="intpii-console">
@@ -54,7 +55,10 @@ export default function App() {
           </label>)}
       </header>
       <nav>{TABS.map((t) => <button key={t} className={t === tab ? "active" : ""} onClick={() => setTab(t)}>{t}</button>)}</nav>
-      {error && <div className="error">Cannot reach the PII service: {error}</div>}
+      {error && <div className="error" role="alert">
+        {error}{" "}
+        <button onClick={() => setRetry((value) => value + 1)}>Retry connection</button>
+      </div>}
       <main>
         {tab === "Redact" && <Redact />}
         {tab === "Playground" && <Playground />}
