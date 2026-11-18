@@ -48,6 +48,15 @@ const APPS = [
     tags: ["Entity recognition", "Documents", "ONNX"],
   },
   {
+    to: "/classi",
+    icon: Network,
+    title: "classi-service",
+    tagline: "Dynamic intelligence",
+    desc: "Classify conversations against custom labels with a restricted live API preview.",
+    accent: "text-teal-300 bg-teal-400/10 ring-teal-400/20",
+    tags: ["Zero-shot", "Dynamic labels", "Restricted preview"],
+  },
+  {
     to: "/kg-bi",
     icon: Network,
     title: "kg-bi",

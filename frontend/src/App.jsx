@@ -33,6 +33,7 @@ import MonitorUsage from "./pages/monitor/MonitorUsage";
 import MonitorHeatmap from "./pages/monitor/MonitorHeatmap";
 import PiiConsole from "./intpii/App";
 import KgBi from "./kgbi/App";
+import Classi from "./classi/App";
 
 function GpaiLayout() {
   return (
@@ -136,6 +137,7 @@ function App() {
         <Route path="/monitor/*" element={<MonitorLayout />} />
         <Route path="/pii/*" element={<PiiLayout />} />
         <Route path="/kg-bi" element={<KgBi />} />
+        <Route path="/classi/*" element={<Classi />} />
       </Routes>
     </HashRouter>
   );

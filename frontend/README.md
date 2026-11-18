@@ -1,5 +1,42 @@
 # React + Vite
 
+## classi-service
+
+The `/#/classi` route has two deliberately separate modes:
+
+- **Production build:** a restricted classification-only Azure preview. The
+  owner enters the preview key into the page at runtime; it is sent to Azure
+  over HTTPS and kept in component memory until leaving or refreshing. It is
+  not bundled or persisted. Anyone with the key can use the API, so use a
+  trusted device and never share it on screen. The exact deployed origin must
+  be allowed by the Azure API's CORS settings; CORS is not authentication.
+  Graph, admin and performance pages are not available in the cloud preview.
+- **Local development:** the existing playground, performance monitor, graph
+  workspace and admin review page use the separate local classi-service API
+  and worker, not `gpai-backend`. Start those services using the classi-service
+  project README; the API defaults to `http://127.0.0.1:8000`, configurable
+  with `VITE_CLASSI_API`. `VITE_CLASSI_PREVIEW=cloud` selects the cloud UI for
+  development, but its API still requires a CORS-allowed origin.
+
+Use fictional data only. Local graph submissions are opt-in and retain the
+transcript for admin review; classification alone does not retain it. The
+Azure F1 instance may be slow to start and uses a shared preview key without
+per-user revocation or rate limiting.
+
+### Current capabilities and phase 2.1
+
+- The Azure preview accepts JSON classification requests with runtime-supplied
+  classes and returns the best label or `ndw` with scores and timing. It
+  requires the shared preview key and supports the portfolio origin.
+- The hosted portfolio provides an owner-operated classifier with example
+  scenarios and runtime key entry; it does not persist the key.
+- The local application offers the separate graph queue, worker, canvas,
+  minimap and admin review. These are not available in the Azure preview.
+- **Phase 2.1:** connect durable cloud graph storage and a separate worker,
+  preserving consent, review, retry and deletion semantics; secure access
+  separately for demo users and administrators. No cloud graph functionality
+  is claimed until it is implemented and verified.
+
 ## kg-bi concept demo
 
 The portfolio's `/#/kg-bi` page illustrates an automotive support knowledge
